@@ -19,13 +19,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainFragment extends Fragment {
+public class MainFragment extends Fragment implements NotesAdapter.Transaction {
 
-   private RecyclerView rvNotes;
-   private NotesAdapter adapter;
-   private List<NoteModel> list = new ArrayList<>();
-   private FloatingActionButton btnOpenAddNoteFragment;
-
+    private RecyclerView rvNotes;
+    private NotesAdapter adapter;
+    private FloatingActionButton btnOpenAddNoteFragment;
 
 
     public MainFragment() {
@@ -39,54 +37,33 @@ public class MainFragment extends Fragment {
         rvNotes = view.findViewById(R.id.rv_notes);
         btnOpenAddNoteFragment = view.findViewById(R.id.btm_open_add_note);
         rvNotes.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new NotesAdapter(getActivity());
-        adapter.setNotesList(list);
+        adapter = new NotesAdapter(this);
         rvNotes.setAdapter(adapter);
 
 
-        btnOpenAddNoteFragment.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.fragment_container, new AddNoteFragment());
-                transaction.addToBackStack("AddNoteFragment");
-                transaction.commit();
-            }
+        btnOpenAddNoteFragment.setOnClickListener(view1 -> {
+            FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragment_container, new AddNoteFragment());
+            transaction.addToBackStack("AddNoteFragment");
+            transaction.commit();
         });
 
-        listenNoteDate();
         listenGetDate();
         return view;
     }
 
-    private void listenNoteDate() {
-        getActivity().getSupportFragmentManager().setFragmentResultListener("newNote", this, new FragmentResultListener() {
-            @Override
-            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
-                if (requestKey.equals("newNote")){
-                    String title = result.getString("title");
-                    String description = result.getString("description");
-                    String date = result.getString("date");
-                    adapter.addNewNote(new NoteModel(title, description, date));
-                    Toast.makeText(requireContext(), "Успешно сохранено!!!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
 
     private void listenGetDate() {
-        getActivity().getSupportFragmentManager().setFragmentResultListener("getNote", this, new FragmentResultListener() {
-            @Override
-            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
-                if (requestKey.equals("getNote")){
-                    String title = result.getString("title");
-                    String description = result.getString("description");
-                    String date = result.getString("date");
-                    int position = result.getInt("position");
-                    adapter.addGetNote(new NoteModel(title, description, date), position);
-                    Toast.makeText(requireContext(), "Успешно изменено!!!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        adapter.setNotesList(App.appDataBase.notesDao().getList());
+    }
+
+    @Override
+    public void translate(NoteModel noteModel) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("model", noteModel);
+        requireActivity().getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, AddNoteFragment.class, bundle)
+                .addToBackStack("Lol")
+                .commit();
     }
 }

@@ -1,18 +1,11 @@
 package com.geektech.homework2_3month;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.icu.text.Transliterator;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -21,21 +14,15 @@ import java.util.List;
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHolder> {
 
     private List<NoteModel> notes = new ArrayList<>();
-    private FragmentActivity activity;
+    private final Transaction transaction;
 
-    public NotesAdapter(FragmentActivity activity) {
-        this.activity = activity;
+    public NotesAdapter(Transaction transaction) {
+        this.transaction = transaction;
     }
 
 
 
-
-    public void addNewNote(NoteModel model){
-        this.notes.add(model);
-        notifyDataSetChanged();
-    }
-
-    public void setNotesList(List<NoteModel> list){
+    public void setNotesList(List<NoteModel> list) {
         this.notes = list;
         notifyDataSetChanged();
     }
@@ -48,26 +35,12 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHol
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NotesViewHolder holder, @SuppressLint("RecyclerView") int position) {
+    public void onBindViewHolder(@NonNull NotesViewHolder holder,  int position) {
         holder.txtTitle.setText(notes.get(position).getTitle());
         holder.txtDescription.setText(notes.get(position).getDescription());
         holder.txtDate.setText(notes.get(position).getDate());
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Bundle bundle = new Bundle();
-                bundle.putString("title", notes.get(position).getTitle());
-                bundle.putString("description", notes.get(position).getDescription());
-                bundle.putString("date", notes.get(position).getDate());
-                bundle.putInt("position", position);
-
-                FragmentTransaction transaction = activity.getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.fragment_container, AddNoteFragment.class, bundle);
-                transaction.addToBackStack("AddNoteFragmentEdit");
-                transaction.commit();
-            }
-        });
+        holder.itemView.setOnClickListener(view -> transaction.translate(notes.get(position)));
     }
 
     @Override
@@ -76,8 +49,8 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHol
     }
 
 
-    public class NotesViewHolder extends RecyclerView.ViewHolder{
-        TextView txtTitle , txtDescription, txtDate;
+    public static class NotesViewHolder extends RecyclerView.ViewHolder {
+        TextView txtTitle, txtDescription, txtDate;
 
         public NotesViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -87,8 +60,8 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHol
         }
     }
 
-    public void addGetNote(NoteModel model, int position){
-        this.notes.set(position, model);
-        notifyItemChanged(position);
+
+    public interface Transaction {
+        void translate(NoteModel noteModel);
     }
 }
